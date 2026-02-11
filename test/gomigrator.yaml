@@ -16,3 +16,8 @@ migrations:
     source: /migrations/postgres
     postgres:
       dsn: ${POSTGRES_DRIVER_DSN}
+
+  - name: test-clickhouse
+    source: /migrations/clickhouse
+    clickhouse:
+      dsn: ${CLICKHOUSE_DRIVER_DSN}

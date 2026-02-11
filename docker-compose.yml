@@ -17,7 +17,8 @@ services:
       - migrator
     environment:
       POSTGRES_DRIVER_DSN: postgresql://gomigrator:gomigrator@postgres:5432/gomigrator?sslmode=disable
-      FIXTURES_ENABLED: true
+      CLICKHOUSE_DRIVER_DSN: clickhouse://clickhouse:9000/gomigrator
+      FIXTURES_ENABLED: false
     networks:
       - gomigrator
     volumes:
@@ -38,6 +39,19 @@ services:
       POSTGRES_DB: gomigrator
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U gomigrator -d gomigrator"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+    networks:
+      - gomigrator
+
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    restart: unless-stopped
+    profiles:
+      - databases
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --query 'SELECT 1'"]
       interval: 3s
       timeout: 5s
       retries: 10
