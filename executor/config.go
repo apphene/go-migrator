@@ -21,9 +21,14 @@ type Config struct {
 }
 
 type migrationConfig struct {
-	Name     string          `yaml:"name"`
-	Source   string          `yaml:"source"`
-	Postgres *postgresConfig `yaml:"postgres"`
+	Name       string            `yaml:"name"`
+	Source     string            `yaml:"source"`
+	Postgres   *postgresConfig   `yaml:"postgres"`
+	Clickhouse *clickhouseConfig `yaml:"clickhouse"`
+}
+
+type clickhouseConfig struct {
+	DSN string `yaml:"dsn"`
 }
 
 type postgresConfig struct {
@@ -84,6 +89,10 @@ func (c *Config) validate() []string {
 			migration.Name = fmt.Sprintf("migration-%d", i)
 		}
 
+		if c.Fixtures && migration.Clickhouse != nil {
+			faults = append(faults, fmt.Sprintf("[%s] fixtures are not supported with the clickhouse driver", migration.Name))
+		}
+
 		faults = append(faults, migration.validate()...)
 	}
 
@@ -103,6 +112,11 @@ func (m *migrationConfig) validate() []string {
 		faults = append(faults, m.Postgres.validate()...)
 	}
 
+	if m.Clickhouse != nil {
+		specifiedDrivers++
+		faults = append(faults, m.Clickhouse.validate()...)
+	}
+
 	if specifiedDrivers == 0 {
 		faults = append(faults, fmt.Sprintf("[%s] a driver must be specified", m.Name))
 	}
@@ -119,12 +133,25 @@ func (m *migrationConfig) getDriver() gomigrator.MigrationDriver {
 		return drivers.NewPostgresDriver(m.Postgres.DSN)
 	}
 
+	if m.Clickhouse != nil {
+		return drivers.NewClickhouseDriver(m.Clickhouse.DSN)
+	}
+
 	return nil
 }
 
 func (p *postgresConfig) validate() []string {
 	faults := []string{}
 	if p.DSN == "" {
+		faults = append(faults, "dsn must be specified")
+	}
+
+	return faults
+}
+
+func (c *clickhouseConfig) validate() []string {
+	faults := []string{}
+	if c.DSN == "" {
 		faults = append(faults, "dsn must be specified")
 	}
 
