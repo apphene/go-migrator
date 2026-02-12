@@ -47,6 +47,10 @@ func executeMigration(ctx context.Context, cfg *Config, migrationCfg migrationCo
 		return
 	}
 
+	if cfg.Fixtures && migrationCfg.Clickhouse != nil {
+		logger.Info("WARN: fixtures are enabled, but the clickhouse driver does not apply fixtures; fixture files will be ignored")
+	}
+
 	migrations, err := gomigrator.LoadMigrationsFromDir(migrationCfg.Source, cfg.Fixtures)
 	if err != nil {
 		logger.Error(fmt.Errorf("failed to load migrations: %w", err))

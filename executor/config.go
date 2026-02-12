@@ -89,10 +89,6 @@ func (c *Config) validate() []string {
 			migration.Name = fmt.Sprintf("migration-%d", i)
 		}
 
-		if c.Fixtures && migration.Clickhouse != nil {
-			faults = append(faults, fmt.Sprintf("[%s] fixtures are not supported with the clickhouse driver", migration.Name))
-		}
-
 		faults = append(faults, migration.validate()...)
 	}
 
